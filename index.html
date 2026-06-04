@@ -15,31 +15,28 @@
 
     <style>
         body {
-            cursor: none;
-            scroll-behavior: smooth;
-            transition: background-color 1s ease;
-            overflow-x: hidden;
+            cursor: none; overflow-x: hidden; background-color: #ffffff;
+            transition: background-color 0.4s ease;
         }
-        html { scroll-behavior: auto !important; }
         
         body::before {
             content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 9999; opacity: 0.04;
+            pointer-events: none; z-index: 9999; opacity: 0.03;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
         }
         
+        /* 🖱️ 초기 마우스 커서 숨김 처리 (will-change 추가로 성능 최적화) */
         .custom-cursor {
             width: 6px; height: 6px; background: #1e1e1e; border-radius: 50%;
             position: fixed; pointer-events: none; z-index: 10000;
+            opacity: 0; transform: scale(1);
             transition: transform 0.1s ease; display: flex; align-items: center; justify-content: center;
+            will-change: opacity, transform;
         }
         
         .scroll-progress {
             position: fixed; top: 0; left: 0; height: 2px; background: #1e1e1e; z-index: 1001; width: 0%;
         }
-        
-        .reveal { opacity: 0; transform: translateY(30px); }
-        .char { display: inline-block; opacity: 0; transform: translateY(60px) rotate(10deg); will-change: transform, opacity; }
         
         .nav-link { position: relative; padding-bottom: 4px; }
         .nav-link::after {
@@ -54,30 +51,36 @@
         }
         
         .section-anchor {
-            font-family: 'Inter', sans-serif; font-weight: 900; font-size: clamp(4rem, 15vw, 12rem); letter-spacing: -0.05em;
-            color: rgba(30, 30, 30, 0.05); text-transform: uppercase; line-height: 1; pointer-events: none; user-select: none; white-space: nowrap;
+            font-family: 'Inter', sans-serif; font-weight: 900; font-size: clamp(4rem, 12vw, 10rem); letter-spacing: -0.05em;
+            color: rgba(30, 30, 30, 0.04); text-transform: uppercase; line-height: 1; pointer-events: none; user-select: none; white-space: nowrap;
         }
-        
-        section { scroll-snap-align: start; }
 
-        /* 🔥 5개 배치에 최적화된 와이드 캐러셀 무대 스테이지 */
-        .carousel-stage {
-            position: relative;
-            height: 420px;
-            width: 100%;
-            max-width: 1040px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* 🚪 상하 분할 스무스 셔터 무대 */
+        #intro-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 9999; pointer-events: none;
         }
-        
+        .shutter-wall {
+            position: absolute; width: 100%; height: 50.5vh; background: #111111; will-change: transform;
+        }
+        #shutter-top { top: 0; }
+        #shutter-bottom { bottom: 0; }
+
+        .pin-container { width: 100%; height: 100vh; overflow: hidden; position: relative; }
+        .pin-wrapper { display: flex; width: 500%; height: 100%; will-change: transform; }
+        .horizontal-panel { width: 100vw; height: 100vh; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
+
+        /* 🔍 자간 조정 및 트랜스폼 오리진 중심점 설정 */
+        .huge-display-text {
+            font-family: 'Inter', sans-serif; font-weight: 900; text-transform: uppercase;
+            font-size: clamp(4rem, 14vw, 11rem); line-height: 0.85; letter-spacing: -0.03em;
+            white-space: nowrap; transform-origin: center center; will-change: transform, opacity;
+        }
+
+        .carousel-stage {
+            position: relative; height: 420px; width: 100%; max-width: 1040px; margin: 0 auto; display: flex; align-items: center; justify-content: center;
+        }
         .carousel-item {
-            position: absolute;
-            width: 300px;
-            height: 360px;
-            transform-origin: center center;
-            will-change: transform, opacity;
+            position: absolute; width: 300px; height: 360px; transform-origin: center center; will-change: transform, opacity;
         }
     </style>
     <script id="tailwind-config">
@@ -90,165 +93,140 @@
                     "fontSize": {
                         "h1": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
                         "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
-                        "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}]
+                        "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
                     }
                 },
             },
         }
     </script>
 </head>
-<body class="bg-white text-primary selection:bg-slate-200">
+<body class="selection:bg-slate-200">
+
+<div id="intro-container">
+    <div class="shutter-wall" id="shutter-top"></div>
+    <div class="shutter-wall" id="shutter-bottom"></div>
+</div>
 
 <div class="custom-cursor hidden md:flex" id="cursor"></div>
 <div class="scroll-progress" id="progress"></div>
 
-<header class="fixed top-0 w-full z-[900] bg-white/80 backdrop-blur-md border-b border-zinc-200/50">
+<header class="fixed top-0 w-full z-[999] bg-white/80 backdrop-blur-md border-b border-zinc-200/50 opacity-0" id="main-header">
     <div class="max-w-[1280px] mx-auto flex justify-between items-center px-8 py-6">
-        <a class="text-lg font-black tracking-tighter text-zinc-900 uppercase cursor-none" id="logo-home" href="#home">PORTFOLIO</a>
-        <nav class="hidden md:flex gap-8">
-            <a class="nav-link font-inter tracking-tight text-sm uppercase text-zinc-900 cursor-none transition-all duration-300 active" href="#home">Home</a>
-            <a class="nav-link font-inter tracking-tight text-sm uppercase text-zinc-400 hover:text-zinc-900 transition-colors duration-300 cursor-none" href="#about">About</a>
-            <a class="nav-link font-inter tracking-tight text-sm uppercase text-zinc-400 hover:text-zinc-900 transition-colors duration-300 cursor-none" href="#skills">Skills</a>
-            <a class="nav-link font-inter tracking-tight text-sm uppercase text-zinc-400 hover:text-zinc-900 transition-colors duration-300 cursor-none" href="#works">Works</a>
-            <a class="nav-link font-inter tracking-tight text-sm uppercase text-zinc-400 hover:text-zinc-900 transition-colors duration-300 cursor-none" href="#contact">Contact</a>
+        <a class="text-lg font-black tracking-tighter text-zinc-900 uppercase cursor-none" href="#" id="logo-home">PORTFOLIO</a>
+        <nav class="hidden md:flex gap-8" id="main-nav">
+            <button class="nav-link font-inter tracking-tight text-sm uppercase text-zinc-900 cursor-none transition-all duration-300 active" data-target="0">Home</button>
+            <button class="nav-link font-inter tracking-tight text-sm uppercase text-zinc-400 hover:text-zinc-900 transition-colors duration-300 cursor-none" data-target="1">About</button>
+            <button class="nav-link font-inter tracking-tight text-sm uppercase text-zinc-400 hover:text-zinc-900 transition-colors duration-300 cursor-none" data-target="2">Skills</button>
+            <button class="nav-link font-inter tracking-tight text-sm uppercase text-zinc-400 hover:text-zinc-900 transition-colors duration-300 cursor-none" data-target="3">Works</button>
+            <button class="nav-link font-inter tracking-tight text-sm uppercase text-zinc-400 hover:text-zinc-900 transition-colors duration-300 cursor-none" data-target="4">Contact</button>
         </nav>
     </div>
 </header>
 
-<main class="max-w-[1280px] mx-auto px-8">
-    
-    <section class="min-h-screen flex flex-col items-center justify-center relative border-b border-zinc-100" data-bg="#ffffff" id="home">
-        <div class="text-center">
-            <h1 class="font-h1 text-h1 uppercase tracking-[0.2em] text-primary mb-4 select-none" id="split-title">Seung Hyeon</h1>
-            <p class="font-label-sm text-label-sm text-zinc-400 uppercase tracking-[0.3em] opacity-0" id="home-sub">Visual &amp; Interaction Designer</p>
-        </div>
-    </section>
+<div id="pin-trigger">
+    <div class="pin-container" id="pin-target">
+        <div class="pin-wrapper" id="panel-wrapper">
+            
+            <!-- PANEL 0: HOME -->
+            <section class="horizontal-panel bg-white px-8" id="panel-home">
+                <div class="text-center select-none flex flex-col items-center justify-center">
+                    <h1 class="huge-display-text text-primary" id="home-main-typo">SEUNG HYEON</h1>
+                    <div class="overflow-hidden mt-6">
+                        <p class="font-label-sm text-label-sm text-zinc-400 uppercase tracking-[0.4em]" id="home-sub-typo" style="transform: translateY(100%); opacity: 0; will-change: transform, opacity;">
+                            Visual &amp; Interaction Portfolio
+                        </p>
+                    </div>
+                </div>
+            </section>
 
-    <section class="min-h-screen flex flex-col items-center justify-start pt-32 text-center relative border-b border-zinc-100" data-bg="#FAF9F6" id="about">
-        <div class="section-anchor">ABOUT</div>
-        <div class="reveal max-w-3xl px-4 mt-20">
-            <p class="font-body-lg text-body-lg text-primary leading-[1.8] font-light">
-                보여지는 것만큼이나 그 안에 담긴 내용이 잘 전달되는지가 중요하다고 생각합니다. <br/>
-                그래서 저는 디자인을 할 때 꾸밈보다는 정돈에 더 집중합니다. <br/>
-                보는 사람이 디자인 자체에 시선을 뺏기기보다, 작업물 안에 담긴 본질을 <br/>
-                편안하게 읽어낼 수 있는 환경을 만드는 것이 저의 작업 방식입니다.
-            </p>
-        </div>
-    </section>
+            <!-- PANEL 1: ABOUT -->
+            <section class="horizontal-panel bg-[#FAF9F6] px-8" id="panel-about">
+                <div class="section-anchor absolute top-24">ABOUT</div>
+                <div class="max-w-3xl text-center z-10">
+                    <p class="font-body-lg text-body-lg text-primary leading-[1.9] font-light break-keep">
+                        보여지는 것만큼이나 그 안에 담긴 내용이 잘 전달되는지가 중요하다고 생각합니다. <br/>
+                        그래서 저는 디자인을 할 때 꾸밈보다는 정돈에 더 집중합니다. <br/>
+                        보는 사람이 디자인 자체에 시선을 뺏기기보다, 작업물 안에 담긴 본질을 <br/>
+                        편안하게 읽어낼 수 있는 환경을 만드는 것이 저의 작업 방식입니다.
+                    </p>
+                </div>
+            </section>
 
-    <section class="min-h-screen flex flex-col items-center justify-start pt-32 relative border-b border-zinc-100" data-bg="#F4F4F5" id="skills">
-        <div class="section-anchor">SKILLS</div>
-        <div class="max-w-[1280px] mx-auto px-8 w-full mt-20">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-12" id="skills-trigger">
-                <div class="glass-card reveal h-80 flex flex-col items-center justify-center p-8 transition-all duration-500 hover:-translate-y-3 hover:shadow-xl border border-zinc-200">
-                    <span class="material-symbols-outlined text-zinc-400 mb-6 scale-150">architecture</span>
-                    <span class="font-label-sm text-label-sm uppercase tracking-[0.15em] text-center leading-loose">Design &amp; Layout:<br/><span class="text-zinc-600 font-medium">Figma</span></span>
+            <!-- PANEL 2: SKILLS -->
+            <section class="horizontal-panel bg-[#F4F4F5] px-8" id="panel-skills">
+                <div class="section-anchor absolute top-24">SKILLS</div>
+                <div class="max-w-[1200px] w-full grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 z-10">
+                    <div class="glass-card h-72 flex flex-col items-center justify-center p-8 border border-zinc-200 rounded-lg">
+                        <span class="material-symbols-outlined text-zinc-400 mb-4 scale-125">architecture</span>
+                        <span class="font-label-sm text-label-sm uppercase tracking-[0.15em] text-center leading-loose">Design &amp; Layout:<br/><span class="text-zinc-600 font-medium">Figma</span></span>
+                    </div>
+                    <div class="glass-card h-72 flex flex-col items-center justify-center p-8 border border-zinc-200 rounded-lg">
+                        <span class="material-symbols-outlined text-zinc-400 mb-4 scale-125">photo_library</span>
+                        <span class="font-label-sm text-label-sm uppercase tracking-[0.15em] text-center leading-loose">Image Editing:<br/><span class="text-zinc-600 font-medium">Photoshop / Illustrator</span></span>
+                    </div>
+                    <div class="glass-card h-72 flex flex-col items-center justify-center p-8 border border-zinc-200 rounded-lg">
+                        <span class="material-symbols-outlined text-zinc-400 mb-4 scale-125">movie</span>
+                        <span class="font-label-sm text-label-sm uppercase tracking-[0.15em] text-center leading-loose">Video Production:<br/><span class="text-zinc-600 font-medium">Premiere / After Effects</span></span>
+                    </div>
                 </div>
-                <div class="glass-card reveal h-80 flex flex-col items-center justify-center p-8 transition-all duration-500 hover:-translate-y-3 hover:shadow-xl border border-zinc-200">
-                    <span class="material-symbols-outlined text-zinc-400 mb-6 scale-150">photo_library</span>
-                    <span class="font-label-sm text-label-sm uppercase tracking-[0.15em] text-center leading-loose">Image Editing:<br/><span class="text-zinc-600 font-medium">Photoshop / Illustrator</span></span>
-                </div>
-                <div class="glass-card reveal h-80 flex flex-col items-center justify-center p-8 transition-all duration-500 hover:-translate-y-3 hover:shadow-xl border border-zinc-200">
-                    <span class="material-symbols-outlined text-zinc-400 mb-6 scale-150">movie</span>
-                    <span class="font-label-sm text-label-sm uppercase tracking-[0.15em] text-center leading-loose">Video Production:<br/><span class="text-zinc-600 font-medium">Premiere / After Effects</span></span>
-                </div>
-            </div>
-        </div>
-    </section>
+            </section>
 
-    <section class="min-h-screen flex flex-col items-center justify-start pt-32 relative" data-bg="#ffffff" id="works">
-        <div class="section-anchor">WORKS</div>
-        
-        <div class="w-full mt-16 reveal" id="works-trigger">
-            <div class="carousel-stage" id="carousel-stage">
-                <div class="carousel-item group bg-purple-50 border border-purple-200 rounded-xl overflow-hidden cursor-none shadow-md">
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span class="material-symbols-outlined text-purple-300 text-6xl mb-4">image</span>
-                        <p class="text-sm tracking-[0.3em] uppercase text-purple-400 font-medium">Project 01</p>
+            <!-- PANEL 3: WORKS -->
+            <section class="horizontal-panel bg-white px-8" id="panel-works">
+                <div class="section-anchor absolute top-24">WORKS</div>
+                <div class="w-full mt-16 z-10">
+                    <div class="carousel-stage" id="carousel-stage">
+                        <div class="carousel-item group bg-purple-50 border border-purple-200 rounded-xl overflow-hidden cursor-none shadow-sm">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="material-symbols-outlined text-purple-300 text-5xl mb-3">image</span><p class="text-xs tracking-widest uppercase text-purple-400 font-medium">Project 01</p></div>
+                            <div class="absolute inset-0 bg-zinc-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"><p class="text-white text-xs tracking-widest uppercase font-semibold">View Detail</p></div>
+                        </div>
+                        <div class="carousel-item group bg-zinc-50 border border-zinc-200 rounded-xl overflow-hidden cursor-none shadow-sm">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="material-symbols-outlined text-zinc-300 text-5xl mb-3">auto_awesome</span><p class="text-xs tracking-widest uppercase text-zinc-400 font-medium">Project 02</p></div>
+                            <div class="absolute inset-0 bg-zinc-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"><p class="text-white text-xs tracking-widest uppercase font-semibold">View Detail</p></div>
+                        </div>
+                        <div class="carousel-item group bg-purple-50 border border-purple-200 rounded-xl overflow-hidden cursor-none shadow-sm">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="material-symbols-outlined text-purple-300 text-5xl mb-3">animation</span><p class="text-xs tracking-widest uppercase text-purple-400 font-medium">Project 03</p></div>
+                            <div class="absolute inset-0 bg-zinc-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"><p class="text-white text-xs tracking-widest uppercase font-semibold">View Detail</p></div>
+                        </div>
+                        <div class="carousel-item group bg-zinc-50 border border-zinc-200 rounded-xl overflow-hidden cursor-none shadow-sm">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="material-symbols-outlined text-zinc-300 text-5xl mb-3">layers</span><p class="text-xs tracking-widest uppercase text-zinc-400 font-medium">Project 04</p></div>
+                            <div class="absolute inset-0 bg-zinc-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"><p class="text-white text-xs tracking-widest uppercase font-semibold">View Detail</p></div>
+                        </div>
+                        <div class="carousel-item group bg-purple-50 border border-purple-200 rounded-xl overflow-hidden cursor-none shadow-sm">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="material-symbols-outlined text-purple-300 text-5xl mb-3">brush</span><p class="text-xs tracking-widest uppercase text-purple-400 font-medium">Project 05</p></div>
+                            <div class="absolute inset-0 bg-zinc-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"><p class="text-white text-xs tracking-widest uppercase font-semibold">View Detail</p></div>
+                        </div>
                     </div>
-                    <div class="absolute inset-0 bg-zinc-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <p class="text-white text-xs tracking-widest uppercase font-semibold">View Detail</p>
-                    </div>
-                </div>
-                <div class="carousel-item group bg-zinc-50 border border-zinc-200 rounded-xl overflow-hidden cursor-none shadow-md">
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span class="material-symbols-outlined text-zinc-300 text-6xl mb-4">auto_awesome</span>
-                        <p class="text-sm tracking-[0.3em] uppercase text-zinc-400 font-medium">Project 02</p>
-                    </div>
-                    <div class="absolute inset-0 bg-zinc-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <p class="text-white text-xs tracking-widest uppercase font-semibold">View Detail</p>
-                    </div>
-                </div>
-                <div class="carousel-item group bg-purple-50 border border-purple-200 rounded-xl overflow-hidden cursor-none shadow-md">
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span class="material-symbols-outlined text-purple-300 text-6xl mb-4">animation</span>
-                        <p class="text-sm tracking-[0.3em] uppercase text-purple-400 font-medium">Project 03</p>
-                    </div>
-                    <div class="absolute inset-0 bg-zinc-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <p class="text-white text-xs tracking-widest uppercase font-semibold">View Detail</p>
-                    </div>
-                </div>
-                <div class="carousel-item group bg-zinc-50 border border-zinc-200 rounded-xl overflow-hidden cursor-none shadow-md">
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span class="material-symbols-outlined text-zinc-300 text-6xl mb-4">layers</span>
-                        <p class="text-sm tracking-[0.3em] uppercase text-zinc-400 font-medium">Project 04</p>
-                    </div>
-                    <div class="absolute inset-0 bg-zinc-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <p class="text-white text-xs tracking-widest uppercase font-semibold">View Detail</p>
+                    <div class="flex justify-center items-center gap-6 mt-6">
+                        <button id="prev-btn" class="w-8 h-8 border border-zinc-300 rounded-full flex items-center justify-center hover:bg-zinc-900 hover:text-white transition-all cursor-none"><span class="material-symbols-outlined text-xs">arrow_back_ios_new</span></button>
+                        <p class="text-[10px] uppercase tracking-widest text-zinc-400 select-none">Auto rolling active</p>
+                        <button id="next-btn" class="w-8 h-8 border border-zinc-300 rounded-full flex items-center justify-center hover:bg-zinc-900 hover:text-white transition-all cursor-none"><span class="material-symbols-outlined text-xs">arrow_forward_ios</span></button>
                     </div>
                 </div>
-                <div class="carousel-item group bg-purple-50 border border-purple-200 rounded-xl overflow-hidden cursor-none shadow-md">
-                    <div class="absolute inset-0 flex flex-col items-center justify-center">
-                        <span class="material-symbols-outlined text-purple-300 text-6xl mb-4">brush</span>
-                        <p class="text-sm tracking-[0.3em] uppercase text-purple-400 font-medium">Project 05</p>
-                    </div>
-                    <div class="absolute inset-0 bg-zinc-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <p class="text-white text-xs tracking-widest uppercase font-semibold">View Detail</p>
-                    </div>
-                </div>
-            </div>
+            </section>
 
-            <div class="flex justify-center items-center gap-6 mt-8">
-                <button id="prev-btn" class="w-10 h-10 border border-zinc-300 rounded-full flex items-center justify-center hover:bg-zinc-900 hover:text-white transition-all cursor-none">
-                    <span class="material-symbols-outlined text-sm">arrow_back_ios_new</span>
-                </button>
-                <p class="text-[11px] uppercase tracking-widest text-zinc-400 select-none">Swipe left/right or use buttons</p>
-                <button id="next-btn" class="w-10 h-10 border border-zinc-300 rounded-full flex items-center justify-center hover:bg-zinc-900 hover:text-white transition-all cursor-none">
-                    <span class="material-symbols-outlined text-sm">arrow_forward_ios</span>
-                </button>
-            </div>
-        </div>
-    </section>
+            <!-- PANEL 4: CONTACT -->
+            <section class="horizontal-panel bg-[#FAF9F6] px-8" id="panel-contact">
+                <div class="section-anchor absolute top-24">CONTACT</div>
+                <div class="max-w-lg text-center z-10">
+                    <p class="font-body-lg text-body-lg text-primary mb-8 font-light break-keep">
+                        새로운 기술에 대한 소식이나 협업 제안은 언제나 환영합니다.
+                    </p>
+                    <a class="nav-link inline-block font-inter text-sm text-zinc-900 tracking-[0.2em] hover:text-accent transition-colors duration-300 cursor-none" href="mailto:cheonseunghyeon7100@gmail.com">
+                        cheonseunghyeon7100@gmail.com
+                    </a>
+                </div>
+            </section>
 
-    <section class="min-h-screen flex flex-col items-center justify-start pt-32 text-center relative border-t border-zinc-100" data-bg="#FAF9F6" id="contact">
-        <div class="section-anchor">CONTACT</div>
-        <div class="reveal mt-20" id="contact-trigger">
-            <p class="font-body-lg text-body-lg text-primary mb-10 font-light max-w-lg">
-                새로운 기술에 대한 소식이나 협업 제안은 언제나 환영합니다.
-            </p>
-            <a class="nav-link inline-block font-inter text-sm text-zinc-900 tracking-[0.2em] hover:text-accent transition-colors duration-300 cursor-none" href="mailto:cheonseunghyeon7100@gmail.com">
-                cheonseunghyeon7100@gmail.com
-            </a>
-        </div>
-    </section>
-</main>
-
-<footer class="w-full py-20 bg-white/50 border-t border-zinc-200">
-    <div class="max-w-[1280px] mx-auto flex flex-col md:flex-row justify-between items-center px-8 gap-8">
-        <p class="font-inter text-[10px] tracking-widest uppercase text-zinc-400">© Seung Hyeon. All rights reserved.</p>
-        <div class="flex gap-12">
-            <a class="nav-link font-inter text-[10px] tracking-widest uppercase text-zinc-400 hover:text-zinc-900 transition-colors cursor-none" href="mailto:cheonseunghyeon7100@gmail.com">Email</a>
-            <a class="nav-link font-inter text-[10px] tracking-widest uppercase text-zinc-400 hover:text-zinc-900 transition-colors cursor-none" href="#">LinkedIn</a>
-            <a class="nav-link font-inter text-[10px] tracking-widest uppercase text-zinc-400 hover:text-zinc-900 transition-colors cursor-none" href="#">Behance</a>
         </div>
     </div>
-</footer>
+</div>
 
 <script>
     if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
     window.scrollTo(0, 0);
 
-    // 1. 마우스 커서 로직
+    // 1. 커스텀 마우스 커서 로직
     const cursor = document.getElementById('cursor');
     document.addEventListener('mousemove', (e) => {
         requestAnimationFrame(() => {
@@ -260,8 +238,8 @@
     document.querySelectorAll('a, button, .carousel-item, .glass-card').forEach(el => {
         el.addEventListener('mouseenter', () => {
             cursor.style.transform = 'scale(4)';
-            cursor.style.background = 'rgba(30, 30, 30, 0.1)';
-            cursor.style.border = '0.5px solid rgba(30, 30, 30, 0.3)';
+            cursor.style.background = 'rgba(30, 30, 30, 0.08)';
+            cursor.style.border = '0.5px solid rgba(30, 30, 30, 0.2)';
         });
         el.addEventListener('mouseleave', () => {
             cursor.style.transform = 'scale(1)';
@@ -270,152 +248,171 @@
         });
     });
 
-    // 2. 부드러운 스크롤 이동 로직
-    document.querySelectorAll('.nav-link[href^="#"], #logo-home').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href');
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                document.documentElement.style.scrollBehavior = 'smooth';
-                const headerOffset = 80;
-                const elementPosition = targetElement.getBoundingClientRect().top;
-                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+    // ========================================================
+    // 👑 2. SCROLLMAGIC + GSAP 가로 핀 슬라이딩 엔진
+    // ========================================================
+    const scrollController = new ScrollMagic.Controller();
+    const timeline = gsap.timeline();
 
-                window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-                if(targetId === '#home') { playHomeAnimation(); }
-                setTimeout(() => { document.documentElement.style.scrollBehavior = 'auto'; }, 800);
-            }
-        });
-    });
+    timeline.to("#panel-wrapper", { x: "-80%", ease: "none" });
 
-    // 3. 스크롤 레이아웃 백그라운드 트랜지션 및 액티브 메뉴 활성화
-    const sections = document.querySelectorAll('section');
-    const navLinks = document.querySelectorAll('header .nav-link');
-    const progress = document.getElementById("progress");
+    const pinDuration = 4000;
+    const pinScene = new ScrollMagic.Scene({
+        triggerElement: "#pin-trigger",
+        triggerHook: 0,
+        duration: pinDuration
+    })
+    .setPin("#pin-target")
+    .setTween(timeline)
+    .addTo(scrollController);
 
+    // 3. 스크롤 네비게이션 싱크
     window.addEventListener('scroll', () => {
-        let winScroll = document.body.scrollTop || document.documentElement.scrollTop;
-        let height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-        progress.style.width = (winScroll / height) * 100 + "%";
-        
-        let currentSectionId = '';
-        sections.forEach(section => {
-            if (winScroll + (window.innerHeight / 3) >= section.offsetTop) {
-                document.body.style.backgroundColor = section.getAttribute('data-bg');
-                currentSectionId = section.getAttribute('id');
-            }
-        });
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const scrolled = (winScroll / height) * 100;
+        document.getElementById("progress").style.width = scrolled + "%";
 
-        navLinks.forEach(link => {
-            if (link.getAttribute('href') === `#${currentSectionId}`) {
-                link.classList.add('active', 'text-zinc-900'); link.classList.remove('text-zinc-400');
-            } else {
-                link.classList.remove('active', 'text-zinc-900'); link.classList.add('text-zinc-400');
-            }
-        });
+        const progressRatio = winScroll / pinDuration;
+        let currentActiveIdx = 0;
+        if (progressRatio >= 0.18) currentActiveIdx = 1;
+        if (progressRatio >= 0.43) currentActiveIdx = 2;
+        if (progressRatio >= 0.68) currentActiveIdx = 3;
+        if (progressRatio >= 0.90) currentActiveIdx = 4;
+        updateActiveMenu(currentActiveIdx);
     });
 
-    // 4. 첫 페이지 글자 분할 재생 함수
-    function playHomeAnimation() {
-        gsap.set(".char", { opacity: 0, y: 60, rotation: 10 });
-        gsap.set("#home-sub", { opacity: 0 });
-        gsap.to(".char", { opacity: 1, y: 0, rotation: 0, duration: 1.2, stagger: 0.06, ease: "back.out(1.5)", delay: 0.1 });
-        gsap.to("#home-sub", { opacity: 1, duration: 1, delay: 0.8 });
+    const menuButtons = document.querySelectorAll('header button');
+    function updateActiveMenu(activeIndex) {
+        menuButtons.forEach((btn, idx) => {
+            if (idx === activeIndex) {
+                btn.classList.add('active', 'text-zinc-900'); btn.classList.remove('text-zinc-400');
+            } else {
+                btn.classList.remove('active', 'text-zinc-900'); btn.classList.add('text-zinc-400');
+            }
+        });
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-        const titleContainer = document.getElementById('split-title');
-        const text = titleContainer.innerText.trim();
-        titleContainer.innerHTML = '';
-        [...text].forEach(char => {
-            const span = document.createElement('span');
-            span.className = 'char';
-            span.innerHTML = char === ' ' ? '&nbsp;' : char;
-            titleContainer.appendChild(span);
+    menuButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const targetIndex = parseInt(this.getAttribute('data-target'));
+            const targetScrollTop = (pinDuration / 4) * targetIndex;
+            window.scrollTo({ top: targetScrollTop, behavior: 'smooth' });
         });
-        playHomeAnimation();
-        renderSlider(); // 슬라이더 최초 배치
     });
 
     // ========================================================
-    // ⚠️ 5. 5개 카드로 원활하게 동작하도록 순환 연산 알고리즘 확장
+    // 🚪 4. [고도화 완성] 오프닝 커서 제어 & 정교한 0.75 축소 엔진
+    // ========================================================
+    window.addEventListener('DOMContentLoaded', () => {
+        const introTl = gsap.timeline();
+
+        // 초기 상태 세팅: 이름은 원래 크기보다 거대하게(scale: 1.25) 대기
+        gsap.set("#home-main-typo", { opacity: 0, scale: 1.25 });
+        // 오프닝 중 마우스 강제 숨김
+        gsap.set("#cursor", { opacity: 0 });
+
+        // 🎬 Phase 1: 셔터 오프닝 스타트
+        introTl.to("#shutter-top", {
+            y: "-51vh",
+            duration: 1.2,
+            ease: "power4.inOut"
+        })
+        .to("#shutter-bottom", {
+            y: "51vh",
+            duration: 1.2,
+            ease: "power4.inOut"
+        }, "<")
+        
+        // 거대한 메인 이름이 부드럽게 등장 후 웅장하게 대기
+        .to("#home-main-typo", {
+            opacity: 1,
+            duration: 1.0,
+            ease: "power2.out"
+        }, "-=0.6")
+
+        // 🎬 Phase 2: 부제가 솟아오르며 이름은 0.75 크기로 콤팩트하게 압축
+        .to("#home-sub-typo", {
+            opacity: 1,
+            y: "0%",
+            duration: 1.3,
+            ease: "power4.out"
+        }, "+=0.3") 
+        .to("#home-main-typo", {
+            scale: 0.75, // 메인 이름을 더욱 작고 정돈된 비율(0.75)로 정밀 변환
+            duration: 1.3,
+            ease: "power4.out"
+        }, "<") 
+
+        // 🎬 Phase 3: 완벽하게 연출이 종료된 후, 커서와 헤더를 노출하며 인터랙션 권한 부여
+        .to("#intro-container", { display: "none", duration: 0 })
+        .to("#main-header", { opacity: 1, duration: 0.5 }, "-=0.5")
+        .to("#cursor", { opacity: 1, duration: 0.4 }, "-=0.2"); // 연출이 끝나면서 커서가 고급스럽게 스르륵 등장
+
+        renderSlider();
+        startAutoPlay();
+    });
+
+    // ========================================================
+    // 🔄 5. WORKS 카드 순환 레이아웃 알고리즘 & 자동 롤링 시스템
     // ========================================================
     const items = document.querySelectorAll('.carousel-item');
-    let activeIndex = 2; // 총 5개(0,1,2,3,4) 중 정중앙인 2번(Project 03)을 기본 액티브로 설정
+    let activeIndex = 2; 
+    let autoPlayTimer = null;
 
     function renderSlider() {
         const total = items.length;
-        
         items.forEach((item, idx) => {
-            // 무한 순환 구조를 위해 상대적 거리 최적화 계산 (-2, -1, 0, 1, 2 범위)
             let offset = idx - activeIndex;
             if (offset < -2) offset += total;
             if (offset > 2) offset -= total;
             
             if (offset === 0) {
-                // [1] 정중앙 활성화 메인 카드
-                gsap.to(item, { x: 0, scale: 1.05, opacity: 1, rotationY: 0, duration: 0.5, ease: "power2.out" });
+                gsap.to(item, { x: 0, scale: 1.05, opacity: 1, rotationY: 0, duration: 0.4, ease: "power2.out" });
                 item.style.zIndex = 40;
             } else if (offset === -1) {
-                // [2] 왼쪽 첫 번째 카드
-                gsap.to(item, { x: -250, scale: 0.85, opacity: 0.5, rotationY: 20, duration: 0.5, ease: "power2.out" });
+                gsap.to(item, { x: -240, scale: 0.85, opacity: 0.6, rotationY: 10, duration: 0.4, ease: "power2.out" });
                 item.style.zIndex = 30;
             } else if (offset === 1) {
-                // [3] 오른쪽 첫 번째 카드
-                gsap.to(item, { x: 250, scale: 0.85, opacity: 0.5, rotationY: -20, duration: 0.5, ease: "power2.out" });
+                gsap.to(item, { x: 240, scale: 0.85, opacity: 0.6, rotationY: -10, duration: 0.4, ease: "power2.out" });
                 item.style.zIndex = 30;
             } else if (offset === -2) {
-                // [4] 가장 왼쪽 뒤로 숨는 카드
-                gsap.to(item, { x: -440, scale: 0.7, opacity: 0.15, rotationY: 35, duration: 0.5, ease: "power2.out" });
+                gsap.to(item, { x: -400, scale: 0.7, opacity: 0.15, rotationY: 20, duration: 0.4, ease: "power2.out" });
                 item.style.zIndex = 10;
             } else if (offset === 2) {
-                // [5] 가장 오른쪽 뒤로 숨는 카드
-                gsap.to(item, { x: 440, scale: 0.7, opacity: 0.15, rotationY: -35, duration: 0.5, ease: "power2.out" });
+                gsap.to(item, { x: 400, scale: 0.7, opacity: 0.15, rotationY: -20, duration: 0.4, ease: "power2.out" });
                 item.style.zIndex = 10;
             }
         });
     }
 
-    // 제어 함수 (5개 규격 순환)
-    function moveNext() {
-        activeIndex = (activeIndex + 1) % items.length;
-        renderSlider();
-    }
-    function movePrev() {
-        activeIndex = (activeIndex - 1 + items.length) % items.length;
-        renderSlider();
+    function moveNext() { activeIndex = (activeIndex + 1) % items.length; renderSlider(); }
+    function movePrev() { activeIndex = (activeIndex - 1 + items.length) % items.length; renderSlider(); }
+
+    function startAutoPlay() {
+        stopAutoPlay();
+        autoPlayTimer = setInterval(moveNext, 2500);
     }
 
-    // 버튼 이벤트
-    document.getElementById('next-btn').addEventListener('click', moveNext);
-    document.getElementById('prev-btn').addEventListener('click', movePrev);
+    function stopAutoPlay() {
+        if (autoPlayTimer) clearInterval(autoPlayTimer);
+    }
 
-    // 마우스 드래그 스와이프 감지
-    let touchStartX = 0;
+    document.getElementById('next-btn').addEventListener('click', () => { moveNext(); startAutoPlay(); });
+    document.getElementById('prev-btn').addEventListener('click', () => { movePrev(); startAutoPlay(); });
+
     const stage = document.getElementById('carousel-stage');
-    
-    stage.addEventListener('mousedown', (e) => { touchStartX = e.clientX; });
+    stage.addEventListener('mouseenter', stopAutoPlay);
+    stage.addEventListener('mouseleave', startAutoPlay);
+
+    let touchStartX = 0;
+    stage.addEventListener('mousedown', (e) => { touchStartX = e.clientX; stopAutoPlay(); });
     stage.addEventListener('mouseup', (e) => {
         let touchEndX = e.clientX;
         if (touchStartX - touchEndX > 50) moveNext();
         if (touchStartX - touchEndX < -50) movePrev();
+        startAutoPlay();
     });
-
-    // ScrollMagic 컨트롤러 연동 초기화
-    const controller = new ScrollMagic.Controller();
-
-    new ScrollMagic.Scene({ triggerElement: "#about", triggerHook: 0.75, reverse: false })
-        .setTween(gsap.to("#about .reveal", { opacity: 1, y: 0, duration: 1.2, ease: "power2.out" })).addTo(controller);
-
-    new ScrollMagic.Scene({ triggerElement: "#skills-trigger", triggerHook: 0.9, reverse: false })
-        .setTween(gsap.to("#skills .reveal", { opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out" })).addTo(controller);
-
-    new ScrollMagic.Scene({ triggerElement: "#works-trigger", triggerHook: 0.9, reverse: false })
-        .setTween(gsap.to("#works .reveal", { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" })).addTo(controller);
-
-    new ScrollMagic.Scene({ triggerElement: "#contact-trigger", triggerHook: 0.8, reverse: false })
-        .setTween(gsap.to("#contact .reveal", { opacity: 1, y: 0, duration: 1, ease: "power2.out" })).addTo(controller);
 </script>
 
 </body>
