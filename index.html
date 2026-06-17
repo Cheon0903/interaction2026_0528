@@ -6,102 +6,132 @@
     <title>PORTFOLIO | Seung Hyeon</title>
     
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=100;300;400;500;600;900&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;600;900&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     
-    <!-- ⚡ 차단되던 기존 cdnjs 대신 깃허브 보안을 우회하는 안정적인 npm 주소로 교체 -->
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/scrollmagic@2.0.8/scrollmagic/uncompressed/ScrollMagic.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/scrollmagic@2.0.8/scrollmagic/uncompressed/plugins/animation.gsap.min.js"></script>
 
     <style>
         body {
-            cursor: none; overflow-x: hidden; background-color: #ffffff;
-            transition: background-color 0.4s ease;
+            cursor: none; overflow-x: hidden; background-color: #09090B;
+            transition: background-color 0.8s cubic-bezier(0.25, 1, 0.5, 1);
         }
         
         body::before {
             content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 9999; opacity: 0.03;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            pointer-events: none; z-index: 9999; opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
         }
         
-        /* 🖱️ 초기 마우스 커서 숨김 처리 (will-change 추가로 성능 최적화) */
         .custom-cursor {
-            width: 6px; height: 6px; background: #1e1e1e; border-radius: 50%;
-            position: fixed; pointer-events: none; z-index: 10000;
-            opacity: 0; transform: scale(1);
-            transition: transform 0.1s ease; display: flex; align-items: center; justify-content: center;
-            will-change: opacity, transform;
+            width: 6px; height: 6px; background: #FFF; border-radius: 50%;
+            position: fixed; pointer-events: none; z-index: 10000; opacity: 0;
+            transition: transform 0.15s ease, background 0.3s ease, border-color 0.3s ease;
+            will-change: opacity, transform, left, top;
         }
         
         .scroll-progress {
-            position: fixed; top: 0; left: 0; height: 2px; background: #1e1e1e; z-index: 1001; width: 0%;
+            position: fixed; top: 0; left: 0; height: 2px; background: #FFF; z-index: 1001; width: 0%;
+            transition: background 0.6s ease;
         }
         
         .nav-link { position: relative; padding-bottom: 4px; }
         .nav-link::after {
-            content: ''; position: absolute; width: 0; height: 1px; bottom: 0; left: 50%; background-color: #1e1e1e;
+            content: ''; position: absolute; width: 0; height: 1px; bottom: 0; left: 50%; background-color: currentColor;
             transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1); transform: translateX(-50%);
         }
         .nav-link:hover::after, .nav-link.active::after { width: 100%; }
         
-        .glass-card {
-            background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(0, 0, 0, 0.05); box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.05);
-        }
-        
         .section-anchor {
-            font-family: 'Inter', sans-serif; font-weight: 900; font-size: clamp(4rem, 12vw, 10rem); letter-spacing: -0.05em;
-            color: rgba(30, 30, 30, 0.04); text-transform: uppercase; line-height: 1; pointer-events: none; user-select: none; white-space: nowrap;
+            font-family: 'Inter', sans-serif; font-weight: 900; 
+            font-size: clamp(6rem, 16vw, 14rem); 
+            letter-spacing: -0.05em;
+            text-transform: uppercase; line-height: 1; pointer-events: none; user-select: none; white-space: nowrap;
+            position: absolute; top: 24%; left: 50%; transform: translateX(-50%); z-index: 0;
+            color: rgba(255, 255, 255, 0.02); transition: color 0.8s ease;
         }
+        .theme-light .section-anchor { color: rgba(17, 17, 17, 0.035); }
 
-        /* 🚪 상하 분할 스무스 셔터 무대 */
         #intro-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 9999; pointer-events: none;
         }
         .shutter-wall {
-            position: absolute; width: 100%; height: 50.5vh; background: #111111; will-change: transform;
+            position: absolute; width: 100%; height: 50.5vh; background: #F5F5F7; will-change: transform;
         }
-        #shutter-top { top: 0; }
-        #shutter-bottom { bottom: 0; }
+        #shutter-top { top: 0; box-shadow: 0 2px 20px rgba(0,0,0,0.05); }
+        #shutter-bottom { bottom: 0; box-shadow: 0 -2px 20px rgba(0,0,0,0.05); }
 
         .pin-container { width: 100%; height: 100vh; overflow: hidden; position: relative; }
         .pin-wrapper { display: flex; width: 500%; height: 100%; will-change: transform; }
         .horizontal-panel { width: 100vw; height: 100vh; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
 
-        /* 🔍 자간 조정 및 트랜스폼 오리진 중심점 설정 */
         .huge-display-text {
             font-family: 'Inter', sans-serif; font-weight: 900; text-transform: uppercase;
             font-size: clamp(4rem, 14vw, 11rem); line-height: 0.85; letter-spacing: -0.03em;
-            white-space: nowrap; transform-origin: center center; will-change: transform, opacity;
+            white-space: nowrap; color: #FFF; transition: color 0.8s ease;
         }
 
-        .carousel-stage {
-            position: relative; height: 420px; width: 100%; max-width: 1040px; margin: 0 auto; display: flex; align-items: center; justify-content: center;
+        .gallery-container-block {
+            position: absolute; bottom: 24%; left: 0; width: 100%; overflow: hidden; z-index: 10;
         }
-        .carousel-item {
-            position: absolute; width: 300px; height: 360px; transform-origin: center center; will-change: transform, opacity;
+        .gallery-stage {
+            display: flex; gap: 60px; padding-left: calc(50vw - 210px); align-items: center; height: 590px;
+            will-change: transform;
+        }
+        
+        .gallery-card {
+            width: 420px; height: 560px; flex-shrink: 0; background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; overflow: hidden;
+            position: relative; transition: border-color 0.4s ease, transform 0.4s ease;
+            
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+        .theme-light .gallery-card { border-color: rgba(17,17,17,0.08); background: rgba(0,0,0,0.03); }
+
+        .card-bg-img {
+            position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; 
+            opacity: 0.65; transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease;
+            will-change: transform;
+        }
+        .theme-light .card-bg-img { opacity: 0.85; }
+        .gallery-card:hover .card-bg-img { transform: scale(1.05); opacity: 0.3; }
+
+        .card-inner-default {
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease;
+        }
+        .gallery-card:hover .card-inner-default {
+            transform: translateY(-30px); opacity: 0;
+        }
+
+        /* 🎯 안전하고 가벼운 오버레이 연산 */
+        .mask-overlay {
+            position: absolute; inset: 0; background: #EAEAEE; 
+            opacity: 0;
+            transform: translateY(15px);
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;
+            z-index: 20;
+            will-change: opacity, transform;
+        }
+        .gallery-card:hover .mask-overlay { 
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .mask-text {
+            transform: translateY(10px); opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1) 0.05s, opacity 0.3s ease 0.05s;
+        }
+        .gallery-card:hover .mask-text {
+            transform: translateY(0); opacity: 1;
         }
     </style>
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": { "primary": "#1e1e1e", "accent": "#334155", "surface": "#f9f9f9", "on-surface": "#1a1c1c", "secondary": "#5e5e5e" },
-                    "fontFamily": { "h1": ["Inter"], "h2": ["Inter"], "body-lg": ["Inter"], "label-sm": ["Inter"] },
-                    "fontSize": {
-                        "h1": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
-                        "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
-                        "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
-                    }
-                },
-            },
-        }
-    </script>
 </head>
-<body class="selection:bg-slate-200">
+<body class="theme-dark selection:bg-neutral-800">
 
 <div id="intro-container">
     <div class="shutter-wall" id="shutter-top"></div>
@@ -111,15 +141,15 @@
 <div class="custom-cursor hidden md:flex" id="cursor"></div>
 <div class="scroll-progress" id="progress"></div>
 
-<header class="fixed top-0 w-full z-[999] bg-white/80 backdrop-blur-md border-b border-zinc-200/50 opacity-0" id="main-header">
+<header class="fixed top-0 w-full z-[999] opacity-0 text-white transition-colors duration-800" id="main-header">
     <div class="max-w-[1280px] mx-auto flex justify-between items-center px-8 py-6">
-        <a class="text-lg font-black tracking-tighter text-zinc-900 uppercase cursor-none" href="#" id="logo-home">PORTFOLIO</a>
+        <a class="text-lg font-black tracking-tighter uppercase cursor-none" href="#" id="logo-home">PORTFOLIO</a>
         <nav class="hidden md:flex gap-8" id="main-nav">
-            <button class="nav-link font-inter tracking-tight text-sm uppercase text-zinc-900 cursor-none transition-all duration-300 active" data-target="0">Home</button>
-            <button class="nav-link font-inter tracking-tight text-sm uppercase text-zinc-400 hover:text-zinc-900 transition-colors duration-300 cursor-none" data-target="1">About</button>
-            <button class="nav-link font-inter tracking-tight text-sm uppercase text-zinc-400 hover:text-zinc-900 transition-colors duration-300 cursor-none" data-target="2">Skills</button>
-            <button class="nav-link font-inter tracking-tight text-sm uppercase text-zinc-400 hover:text-zinc-900 transition-colors duration-300 cursor-none" data-target="3">Works</button>
-            <button class="nav-link font-inter tracking-tight text-sm uppercase text-zinc-400 hover:text-zinc-900 transition-colors duration-300 cursor-none" data-target="4">Contact</button>
+            <button class="nav-link font-inter tracking-tight text-sm uppercase cursor-none transition-all duration-300 active" data-target="0">Home</button>
+            <button class="nav-link font-inter tracking-tight text-sm uppercase text-neutral-500 hover:text-white transition-colors duration-300 cursor-none" data-target="1">About</button>
+            <button class="nav-link font-inter tracking-tight text-sm uppercase text-neutral-500 hover:text-white transition-colors duration-300 cursor-none" data-target="2">Skills</button>
+            <button class="nav-link font-inter tracking-tight text-sm uppercase text-neutral-500 hover:text-white transition-colors duration-300 cursor-none" data-target="3">Works</button>
+            <button class="nav-link font-inter tracking-tight text-sm uppercase text-neutral-500 hover:text-white transition-colors duration-300 cursor-none" data-target="4">Contact</button>
         </nav>
     </div>
 </header>
@@ -128,23 +158,21 @@
     <div class="pin-container" id="pin-target">
         <div class="pin-wrapper" id="panel-wrapper">
             
-            <!-- PANEL 0: HOME -->
-            <section class="horizontal-panel bg-white px-8" id="panel-home">
+            <section class="horizontal-panel bg-transparent px-8" id="panel-home">
                 <div class="text-center select-none flex flex-col items-center justify-center">
-                    <h1 class="huge-display-text text-primary" id="home-main-typo">SEUNG HYEON</h1>
+                    <h1 class="huge-display-text" id="home-main-typo">SEUNG HYEON</h1>
                     <div class="overflow-hidden mt-6">
-                        <p class="font-label-sm text-label-sm text-zinc-400 uppercase tracking-[0.4em]" id="home-sub-typo" style="transform: translateY(100%); opacity: 0; will-change: transform, opacity;">
+                        <p class="font-label-sm text-sm text-neutral-500 uppercase tracking-[0.4em]" id="home-sub-typo">
                             Visual &amp; Interaction Portfolio
                         </p>
                     </div>
                 </div>
             </section>
 
-            <!-- PANEL 1: ABOUT -->
-            <section class="horizontal-panel bg-[#FAF9F6] px-8" id="panel-about">
-                <div class="section-anchor absolute top-24">ABOUT</div>
-                <div class="max-w-3xl text-center z-10">
-                    <p class="font-body-lg text-body-lg text-primary leading-[1.9] font-light break-keep">
+            <section class="horizontal-panel bg-transparent px-8" id="panel-about">
+                <div class="section-anchor">ABOUT</div>
+                <div class="max-w-3xl text-center z-10 mt-32">
+                    <p id="about-text" class="text-lg text-neutral-400 leading-[2.2] font-light break-keep tracking-wide transition-colors duration-800">
                         보여지는 것만큼이나 그 안에 담긴 내용이 잘 전달되는지가 중요하다고 생각합니다. <br/>
                         그래서 저는 디자인을 할 때 꾸밈보다는 정돈에 더 집중합니다. <br/>
                         보는 사람이 디자인 자체에 시선을 뺏기기보다, 작업물 안에 담긴 본질을 <br/>
@@ -153,67 +181,85 @@
                 </div>
             </section>
 
-            <!-- PANEL 2: SKILLS -->
-            <section class="horizontal-panel bg-[#F4F4F5] px-8" id="panel-skills">
-                <div class="section-anchor absolute top-24">SKILLS</div>
-                <div class="max-w-[1200px] w-full grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 z-10">
-                    <div class="glass-card h-72 flex flex-col items-center justify-center p-8 border border-zinc-200 rounded-lg">
-                        <span class="material-symbols-outlined text-zinc-400 mb-4 scale-125">architecture</span>
-                        <span class="font-label-sm text-label-sm uppercase tracking-[0.15em] text-center leading-loose">Design &amp; Layout:<br/><span class="text-zinc-600 font-medium">Figma</span></span>
+            <section class="horizontal-panel bg-transparent px-8" id="panel-skills">
+                <div class="section-anchor">SKILLS</div>
+                <div class="max-w-[1240px] w-full grid grid-cols-1 md:grid-cols-3 gap-8 mt-36 z-10">
+                    <div class="bg-white/5 border border-neutral-800 h-[380px] flex flex-col items-center justify-center p-10 rounded-xl transition-all duration-500 skill-card">
+                        <span class="material-symbols-outlined text-neutral-500 mb-6 scale-[1.3] font-light">architecture</span>
+                        <span class="font-inter text-xs uppercase tracking-[0.2em] text-center leading-loose text-neutral-400">Design &amp; Layout<br/><span class="text-neutral-200 font-semibold text-base tracking-tight skill-title">Figma</span></span>
                     </div>
-                    <div class="glass-card h-72 flex flex-col items-center justify-center p-8 border border-zinc-200 rounded-lg">
-                        <span class="material-symbols-outlined text-zinc-400 mb-4 scale-125">photo_library</span>
-                        <span class="font-label-sm text-label-sm uppercase tracking-[0.15em] text-center leading-loose">Image Editing:<br/><span class="text-zinc-600 font-medium">Photoshop / Illustrator</span></span>
+                    <div class="bg-white/5 border border-neutral-800 h-[380px] flex flex-col items-center justify-center p-10 rounded-xl transition-all duration-500 skill-card">
+                        <span class="material-symbols-outlined text-neutral-500 mb-6 scale-[1.3] font-light">photo_library</span>
+                        <span class="font-inter text-xs uppercase tracking-[0.2em] text-center leading-loose text-neutral-400">Image Editing<br/><span class="text-neutral-200 font-semibold text-base tracking-tight skill-title">Photoshop / Illustrator</span></span>
                     </div>
-                    <div class="glass-card h-72 flex flex-col items-center justify-center p-8 border border-zinc-200 rounded-lg">
-                        <span class="material-symbols-outlined text-zinc-400 mb-4 scale-125">movie</span>
-                        <span class="font-label-sm text-label-sm uppercase tracking-[0.15em] text-center leading-loose">Video Production:<br/><span class="text-zinc-600 font-medium">Premiere / After Effects</span></span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- PANEL 3: WORKS -->
-            <section class="horizontal-panel bg-white px-8" id="panel-works">
-                <div class="section-anchor absolute top-24">WORKS</div>
-                <div class="w-full mt-16 z-10">
-                    <div class="carousel-stage" id="carousel-stage">
-                        <div class="carousel-item group bg-purple-50 border border-purple-200 rounded-xl overflow-hidden cursor-none shadow-sm">
-                            <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="material-symbols-outlined text-purple-300 text-5xl mb-3">image</span><p class="text-xs tracking-widest uppercase text-purple-400 font-medium">Project 01</p></div>
-                            <div class="absolute inset-0 bg-zinc-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"><p class="text-white text-xs tracking-widest uppercase font-semibold">View Detail</p></div>
-                        </div>
-                        <div class="carousel-item group bg-zinc-50 border border-zinc-200 rounded-xl overflow-hidden cursor-none shadow-sm">
-                            <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="material-symbols-outlined text-zinc-300 text-5xl mb-3">auto_awesome</span><p class="text-xs tracking-widest uppercase text-zinc-400 font-medium">Project 02</p></div>
-                            <div class="absolute inset-0 bg-zinc-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"><p class="text-white text-xs tracking-widest uppercase font-semibold">View Detail</p></div>
-                        </div>
-                        <div class="carousel-item group bg-purple-50 border border-purple-200 rounded-xl overflow-hidden cursor-none shadow-sm">
-                            <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="material-symbols-outlined text-purple-300 text-5xl mb-3">animation</span><p class="text-xs tracking-widest uppercase text-purple-400 font-medium">Project 03</p></div>
-                            <div class="absolute inset-0 bg-zinc-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"><p class="text-white text-xs tracking-widest uppercase font-semibold">View Detail</p></div>
-                        </div>
-                        <div class="carousel-item group bg-zinc-50 border border-zinc-200 rounded-xl overflow-hidden cursor-none shadow-sm">
-                            <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="material-symbols-outlined text-zinc-300 text-5xl mb-3">layers</span><p class="text-xs tracking-widest uppercase text-zinc-400 font-medium">Project 04</p></div>
-                            <div class="absolute inset-0 bg-zinc-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"><p class="text-white text-xs tracking-widest uppercase font-semibold">View Detail</p></div>
-                        </div>
-                        <div class="carousel-item group bg-purple-50 border border-purple-200 rounded-xl overflow-hidden cursor-none shadow-sm">
-                            <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="material-symbols-outlined text-purple-300 text-5xl mb-3">brush</span><p class="text-xs tracking-widest uppercase text-purple-400 font-medium">Project 05</p></div>
-                            <div class="absolute inset-0 bg-zinc-900/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"><p class="text-white text-xs tracking-widest uppercase font-semibold">View Detail</p></div>
-                        </div>
-                    </div>
-                    <div class="flex justify-center items-center gap-6 mt-6">
-                        <button id="prev-btn" class="w-8 h-8 border border-zinc-300 rounded-full flex items-center justify-center hover:bg-zinc-900 hover:text-white transition-all cursor-none"><span class="material-symbols-outlined text-xs">arrow_back_ios_new</span></button>
-                        <p class="text-[10px] uppercase tracking-widest text-zinc-400 select-none">Auto rolling active</p>
-                        <button id="next-btn" class="w-8 h-8 border border-zinc-300 rounded-full flex items-center justify-center hover:bg-zinc-900 hover:text-white transition-all cursor-none"><span class="material-symbols-outlined text-xs">arrow_forward_ios</span></button>
+                    <div class="bg-white/5 border border-neutral-800 h-[380px] flex flex-col items-center justify-center p-10 rounded-xl transition-all duration-500 skill-card">
+                        <span class="material-symbols-outlined text-neutral-500 mb-6 scale-[1.3] font-light">movie</span>
+                        <span class="font-inter text-xs uppercase tracking-[0.2em] text-center leading-loose text-neutral-400">Video Production<br/><span class="text-neutral-200 font-semibold text-base tracking-tight skill-title">Premiere / After Effects</span></span>
                     </div>
                 </div>
             </section>
 
-            <!-- PANEL 4: CONTACT -->
-            <section class="horizontal-panel bg-[#FAF9F6] px-8" id="panel-contact">
-                <div class="section-anchor absolute top-24">CONTACT</div>
-                <div class="max-w-lg text-center z-10">
-                    <p class="font-body-lg text-body-lg text-primary mb-8 font-light break-keep">
+            <section class="horizontal-panel bg-transparent" id="panel-works">
+                <div class="section-anchor">WORKS</div>
+                
+                <div class="gallery-container-block" id="gallery-container">
+                    <div class="gallery-stage" id="gallery-stage">
+                        
+                        <div class="gallery-card group cursor-none">
+                            <img src="work01.jpg" alt="Project 01" class="card-bg-img">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center card-inner-default z-10">
+                                <p class="text-sm tracking-[0.25em] font-mono uppercase text-white font-semibold drop-shadow-md">Project 01</p>
+                            </div>
+                            <div class="mask-overlay">
+                                <span class="material-symbols-outlined text-neutral-900 text-3xl mb-2 font-light mask-text">arrow_forward</span>
+                                <p class="text-xs font-mono tracking-widest text-neutral-900 uppercase font-bold mask-text">View Archive</p>
+                            </div>
+                        </div>
+
+                        <div class="gallery-card group cursor-none">
+                            <img src="work02.jpg" alt="Project 02" class="card-bg-img">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center card-inner-default z-10">
+                                <p class="text-sm tracking-[0.25em] font-mono uppercase text-white font-semibold drop-shadow-md">Project 02</p>
+                            </div>
+                            <div class="mask-overlay">
+                                <span class="material-symbols-outlined text-neutral-900 text-3xl mb-2 font-light mask-text">arrow_forward</span>
+                                <p class="text-xs font-mono tracking-widest text-neutral-900 uppercase font-bold mask-text">View Archive</p>
+                            </div>
+                        </div>
+
+                        <div class="gallery-card group cursor-none">
+                            <img src="work03.jpg" alt="Project 03" class="card-bg-img">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center card-inner-default z-10">
+                                <p class="text-sm tracking-[0.25em] font-mono uppercase text-white font-semibold drop-shadow-md">Project 03</p>
+                            </div>
+                            <div class="mask-overlay">
+                                <span class="material-symbols-outlined text-neutral-900 text-3xl mb-2 font-light mask-text">arrow_forward</span>
+                                <p class="text-xs font-mono tracking-widest text-neutral-900 uppercase font-bold mask-text">View Archive</p>
+                            </div>
+                        </div>
+
+                        <div class="gallery-card group cursor-none">
+                            <img src="work04.jpg" alt="Project 04" class="card-bg-img">
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center card-inner-default z-10">
+                                <p class="text-sm tracking-[0.25em] font-mono uppercase text-white font-semibold drop-shadow-md">Project 04</p>
+                            </div>
+                            <div class="mask-overlay">
+                                <span class="material-symbols-outlined text-neutral-900 text-3xl mb-2 font-light mask-text">arrow_forward</span>
+                                <p class="text-xs font-mono tracking-widest text-neutral-900 uppercase font-bold mask-text">View Archive</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <section class="horizontal-panel bg-transparent px-8" id="panel-contact">
+                <div class="section-anchor">CONTACT</div>
+                <div class="max-w-lg text-center z-10 mt-32">
+                    <p id="contact-text" class="text-neutral-400 mb-8 font-light break-keep tracking-wide transition-colors duration-800">
                         새로운 기술에 대한 소식이나 협업 제안은 언제나 환영합니다.
                     </p>
-                    <a class="nav-link inline-block font-inter text-sm text-zinc-900 tracking-[0.2em] hover:text-accent transition-colors duration-300 cursor-none" href="mailto:cheonseunghyeon7100@gmail.com">
+                    <a id="contact-mail" class="nav-link inline-block font-inter text-sm text-white tracking-[0.25em] hover:text-neutral-400 transition-colors duration-300 cursor-none" href="mailto:cheonseunghyeon7100@gmail.com">
                         cheonseunghyeon7100@gmail.com
                     </a>
                 </div>
@@ -227,7 +273,6 @@
     if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
     window.scrollTo(0, 0);
 
-    // 1. 커스텀 마우스 커서 로직
     const cursor = document.getElementById('cursor');
     document.addEventListener('mousemove', (e) => {
         requestAnimationFrame(() => {
@@ -236,25 +281,25 @@
         });
     });
 
-    document.querySelectorAll('a, button, .carousel-item, .glass-card').forEach(el => {
-        el.addEventListener('mouseenter', () => {
-            cursor.style.transform = 'scale(4)';
-            cursor.style.background = 'rgba(30, 30, 30, 0.08)';
-            cursor.style.border = '0.5px solid rgba(30, 30, 30, 0.2)';
+    function setupCursorInteractions() {
+        const isDark = document.body.classList.contains('theme-dark');
+        document.querySelectorAll('a, button, .gallery-card, .skill-card').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursor.style.transform = 'scale(5.5)';
+                cursor.style.background = isDark ? 'rgba(255,255,255,0.03)' : 'rgba(17,17,17,0.02)';
+                cursor.style.borderColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(17,17,17,0.15)';
+                cursor.style.borderWidth = '0.5px';
+            });
+            el.addEventListener('mouseleave', () => {
+                cursor.style.transform = 'scale(1)';
+                cursor.style.background = isDark ? '#FFFFFF' : '#111111';
+                cursor.style.border = 'none';
+            });
         });
-        el.addEventListener('mouseleave', () => {
-            cursor.style.transform = 'scale(1)';
-            cursor.style.background = '#1e1e1e';
-            cursor.style.border = 'none';
-        });
-    });
+    }
 
-    // ========================================================
-    // 👑 2. SCROLLMAGIC + GSAP 가로 핀 슬라이딩 엔진
-    // ========================================================
     const scrollController = new ScrollMagic.Controller();
     const timeline = gsap.timeline();
-
     timeline.to("#panel-wrapper", { x: "-80%", ease: "none" });
 
     const pinDuration = 4000;
@@ -267,29 +312,74 @@
     .setTween(timeline)
     .addTo(scrollController);
 
-    // 3. 스크롤 네비게이션 싱크
+    const body = document.body;
+    const header = document.getElementById('main-header');
+    const progress = document.getElementById('progress');
+    const homeTypo = document.getElementById('home-main-typo');
+    const aboutText = document.getElementById('about-text');
+    const contactText = document.getElementById('contact-text');
+    const contactMail = document.getElementById('contact-mail');
+    const skillCards = document.querySelectorAll('.skill-card');
+    const skillTitles = document.querySelectorAll('.skill-title');
+    const galleryStage = document.getElementById('gallery-stage');
+
     window.addEventListener('scroll', () => {
         const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
         const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
         const scrolled = (winScroll / height) * 100;
-        document.getElementById("progress").style.width = scrolled + "%";
+        progress.style.width = scrolled + "%";
 
         const progressRatio = winScroll / pinDuration;
+
         let currentActiveIdx = 0;
         if (progressRatio >= 0.18) currentActiveIdx = 1;
         if (progressRatio >= 0.43) currentActiveIdx = 2;
         if (progressRatio >= 0.68) currentActiveIdx = 3;
         if (progressRatio >= 0.90) currentActiveIdx = 4;
         updateActiveMenu(currentActiveIdx);
+
+        if (progressRatio < 0.15) {
+            if (!body.classList.contains('theme-dark')) {
+                body.classList.add('theme-dark'); body.classList.remove('theme-light');
+                body.style.backgroundColor = "#09090B";
+                header.style.color = "#FFFFFF"; progress.style.background = "#FFFFFF";
+                homeTypo.style.color = "#FFFFFF"; aboutText.style.color = "#A3A3A3";
+                contactText.style.color = "#A3A3A3"; contactMail.style.color = "#FFFFFF";
+                skillCards.forEach(c => { c.style.backgroundColor = "rgba(255,255,255,0.05)"; c.style.borderColor = "#27272A"; });
+                skillTitles.forEach(t => t.style.color = "#E4E4E7"); cursor.style.background = "#FFFFFF";
+                setupCursorInteractions();
+            }
+        } else {
+            if (!body.classList.contains('theme-light')) {
+                body.classList.add('theme-light'); body.classList.remove('theme-dark');
+                body.style.backgroundColor = "#F5F5F7";
+                header.style.color = "#111111"; progress.style.background = "#111111";
+                homeTypo.style.color = "#111111"; aboutText.style.color = "#262626";
+                contactText.style.color = "#262626"; contactMail.style.color = "#111111";
+                skillCards.forEach(c => { c.style.backgroundColor = "#FFFFFF"; c.style.borderColor = "rgba(17,17,17,0.06)"; });
+                skillTitles.forEach(t => t.style.color = "#111111"); cursor.style.background = "#111111";
+                setupCursorInteractions();
+            }
+        }
+
+        if (progressRatio >= 0.55 && progressRatio <= 0.82) {
+            const rangeProgress = (progressRatio - 0.55) / (0.82 - 0.55);
+            const maxScroll = galleryStage.scrollWidth - (window.innerWidth * 0.45);
+            galleryStage.style.transform = `translateX(${-rangeProgress * maxScroll * 0.62}px)`;
+        }
     });
 
     const menuButtons = document.querySelectorAll('header button');
     function updateActiveMenu(activeIndex) {
         menuButtons.forEach((btn, idx) => {
+            const isDark = body.classList.contains('theme-dark');
             if (idx === activeIndex) {
-                btn.classList.add('active', 'text-zinc-900'); btn.classList.remove('text-zinc-400');
+                btn.classList.add('active');
+                btn.classList.add(isDark ? 'text-white' : 'text-neutral-900');
+                btn.classList.remove(isDark ? 'text-neutral-500' : 'text-neutral-400');
             } else {
-                btn.classList.remove('active', 'text-zinc-900'); btn.classList.add('text-zinc-400');
+                btn.classList.remove('active', 'text-white', 'text-neutral-900');
+                btn.classList.add(isDark ? 'text-neutral-500' : 'text-neutral-400');
             }
         });
     }
@@ -302,117 +392,19 @@
         });
     });
 
-    // ========================================================
-    // 🚪 4. [고도화 완성] 오프닝 커서 제어 & 정교한 0.75 축소 엔진
-    // ========================================================
     window.addEventListener('DOMContentLoaded', () => {
         const introTl = gsap.timeline();
-
-        // 초기 상태 세팅: 이름은 원래 크기보다 거대하게(scale: 1.25) 대기
-        gsap.set("#home-main-typo", { opacity: 0, scale: 1.25 });
-        // 오프닝 중 마우스 강제 숨김
+        gsap.set("#home-main-typo", { opacity: 0, scale: 1.05 });
         gsap.set("#cursor", { opacity: 0 });
 
-        // 🎬 Phase 1: 셔터 오프닝 스타트
-        introTl.to("#shutter-top", {
-            y: "-51vh",
-            duration: 1.2,
-            ease: "power4.inOut"
-        })
-        .to("#shutter-bottom", {
-            y: "51vh",
-            duration: 1.2,
-            ease: "power4.inOut"
-        }, "<")
-        
-        // 거대한 메인 이름이 부드럽게 등장 후 웅장하게 대기
-        .to("#home-main-typo", {
-            opacity: 1,
-            duration: 1.0,
-            ease: "power2.out"
-        }, "-=0.6")
-
-        // 🎬 Phase 2: 부제가 솟아오르며 이름은 0.75 크기로 콤팩트하게 압축
-        .to("#home-sub-typo", {
-            opacity: 1,
-            y: "0%",
-            duration: 1.3,
-            ease: "power4.out"
-        }, "+=0.3") 
-        .to("#home-main-typo", {
-            scale: 0.75, // 메인 이름을 더욱 작고 정돈된 비율(0.75)로 정밀 변환
-            duration: 1.3,
-            ease: "power4.out"
-        }, "<") 
-
-        // 🎬 Phase 3: 완벽하게 연출이 종료된 후, 커서와 헤더를 노출하며 인터랙션 권한 부여
+        introTl.to("#shutter-top", { y: "-51vh", duration: 1.3, ease: "power4.inOut" })
+        .to("#shutter-bottom", { y: "51vh", duration: 1.3, ease: "power4.inOut" }, "<")
+        .to("#home-main-typo", { opacity: 1, scale: 1, duration: 0.9, ease: "power2.out" }, "-=0.4")
         .to("#intro-container", { display: "none", duration: 0 })
-        .to("#main-header", { opacity: 1, duration: 0.5 }, "-=0.5")
-        .to("#cursor", { opacity: 1, duration: 0.4 }, "-=0.2"); // 연출이 끝나면서 커서가 고급스럽게 스르륵 등장
+        .to("#main-header", { opacity: 1, duration: 0.5 }, "-=0.3")
+        .to("#cursor", { opacity: 1, duration: 0.4 }, "-=0.2");
 
-        renderSlider();
-        startAutoPlay();
-    });
-
-    // ========================================================
-    // 🔄 5. WORKS 카드 순환 레이아웃 알고리즘 & 자동 롤링 시스템
-    // ========================================================
-    const items = document.querySelectorAll('.carousel-item');
-    let activeIndex = 2; 
-    let autoPlayTimer = null;
-
-    function renderSlider() {
-        const total = items.length;
-        items.forEach((item, idx) => {
-            let offset = idx - activeIndex;
-            if (offset < -2) offset += total;
-            if (offset > 2) offset -= total;
-            
-            if (offset === 0) {
-                gsap.to(item, { x: 0, scale: 1.05, opacity: 1, rotationY: 0, duration: 0.4, ease: "power2.out" });
-                item.style.zIndex = 40;
-            } else if (offset === -1) {
-                gsap.to(item, { x: -240, scale: 0.85, opacity: 0.6, rotationY: 10, duration: 0.4, ease: "power2.out" });
-                item.style.zIndex = 30;
-            } else if (offset === 1) {
-                gsap.to(item, { x: 240, scale: 0.85, opacity: 0.6, rotationY: -10, duration: 0.4, ease: "power2.out" });
-                item.style.zIndex = 30;
-            } else if (offset === -2) {
-                gsap.to(item, { x: -400, scale: 0.7, opacity: 0.15, rotationY: 20, duration: 0.4, ease: "power2.out" });
-                item.style.zIndex = 10;
-            } else if (offset === 2) {
-                gsap.to(item, { x: 400, scale: 0.7, opacity: 0.15, rotationY: -20, duration: 0.4, ease: "power2.out" });
-                item.style.zIndex = 10;
-            }
-        });
-    }
-
-    function moveNext() { activeIndex = (activeIndex + 1) % items.length; renderSlider(); }
-    function movePrev() { activeIndex = (activeIndex - 1 + items.length) % items.length; renderSlider(); }
-
-    function startAutoPlay() {
-        stopAutoPlay();
-        autoPlayTimer = setInterval(moveNext, 2500);
-    }
-
-    function stopAutoPlay() {
-        if (autoPlayTimer) clearInterval(autoPlayTimer);
-    }
-
-    document.getElementById('next-btn').addEventListener('click', () => { moveNext(); startAutoPlay(); });
-    document.getElementById('prev-btn').addEventListener('click', () => { movePrev(); startAutoPlay(); });
-
-    const stage = document.getElementById('carousel-stage');
-    stage.addEventListener('mouseenter', stopAutoPlay);
-    stage.addEventListener('mouseleave', startAutoPlay);
-
-    let touchStartX = 0;
-    stage.addEventListener('mousedown', (e) => { touchStartX = e.clientX; stopAutoPlay(); });
-    stage.addEventListener('mouseup', (e) => {
-        let touchEndX = e.clientX;
-        if (touchStartX - touchEndX > 50) moveNext();
-        if (touchStartX - touchEndX < -50) movePrev();
-        startAutoPlay();
+        setupCursorInteractions();
     });
 </script>
 
